@@ -140,19 +140,10 @@ public class IABiosphere7 {
         MonTacheron monTacheron = new MonTacheron(couleur);
 
         JoueurBiosphere7 joueur = new JoueurBiosphere7();
-        String[] actionsPossiblesDepuisPlateau
-                = joueur.actionsPossibles(plateau, couleur, 6);
+        String[] actionsPossiblesDepuisPlateau = ActionsPossibles.nettoyerTableau(joueur.actionsPossibles(plateau, couleur, 6));
 
-        ActionsPossibles actionsPossibles
-                = new ActionsPossibles(actionsPossiblesDepuisPlateau);
-
-        actionsPossibles.afficher();
-
-        
-        String highestStr = " ";
-
-        Vitalites scoreActuel = JoueurBiosphere7.vitalitesPlateau(plateau);
-
+        String highestStr = null;
+        double highest = -9999.0;
 
         int nbPommiersBleu = nbPommier(plateau, 'B');
         int nbPommiersRouge = nbPommier(plateau, 'R');
@@ -162,66 +153,104 @@ public class IABiosphere7 {
         } else {
             couleurAdverse = 'R';
         }
+        
         int nbPommiersMoi = nbPommier(plateau, couleur);
 
         int HighestVitaMoi = highestVita(plateau, couleur);
         int HighestVitaAdverse = highestVita(plateau, couleurAdverse);
 
         Coordonnees CentreCluster = BuildPatternCentre(plateau, couleur);
-        
-        Coordonnees bestCaseClusterAdverse =  DetectPatternCoord(plateau, couleurAdverse);
-        int nbCaseClusterAdverse = DetectPatternNb(plateau, couleurAdverse);
-        
-        Coordonnees bestCaseClusterMoi =  DetectPatternCoord(plateau, couleur);
-        int nbCaseClusterMoi = DetectPatternNb(plateau, couleur);
 
-        if (nbPommiersMoi <= 2 || (nbPommiersMoi >= 3 && HighestVitaMoi > 2)) {//ici forcément égalité contre le cadet
-            String[] listeAction = new String[0];
 
-            int Rouge;
-            int Bleu;
+        for (int i = 0; i < actionsPossiblesDepuisPlateau.length; i++) {
+            String wholeString = actionsPossiblesDepuisPlateau[i];
+            String lettresAction = ActionsPossibles.enleverVitalites(wholeString);
 
-            int highest = -99;
+            char lettreAction = lettresAction.charAt(0);
+            char lettreLigne = lettresAction.charAt(1);
+            char lettreColonne = lettresAction.charAt(2);
 
-            for (int TableauEcartZeroIndexDeLindex = 0; TableauEcartZeroIndexDeLindex < actionsPossiblesDepuisPlateau.length; TableauEcartZeroIndexDeLindex++) {
-                String[] separatedScoreBaseDeux = actionsPossiblesDepuisPlateau[TableauEcartZeroIndexDeLindex].split(",");
-                String RougeStrDeux = separatedScoreBaseDeux[1];
-                String BleuStrDeux = separatedScoreBaseDeux[2];
+            Coordonnees coord = Coordonnees.depuisCars(lettreLigne, lettreColonne);
+            Case caseConcernee = plateau[coord.ligne][coord.colonne];
+            
+            Coordonnees caseConcerneeLignePlusUn = new Coordonnees(coord.ligne + 1, coord.colonne);
+            Coordonnees caseConcerneeLigneMoinsUn = new Coordonnees(coord.ligne - 1, coord.colonne);
+            Coordonnees caseConcerneeColonnePlusUn = new Coordonnees(coord.ligne, coord.colonne + 1);
+            Coordonnees caseConcerneeColonneMoinsUn = new Coordonnees(coord.ligne, coord.colonne - 1);
 
-                Rouge = Integer.parseInt(RougeStrDeux);
-                Bleu = Integer.parseInt(BleuStrDeux);
+            int voisinsMoiLignePlusUn = IABiosphere7.nbVoisinesJoueur(caseConcerneeLignePlusUn, plateau, couleur);
+            int voisinsMoiLigneMoinsUn = IABiosphere7.nbVoisinesJoueur(caseConcerneeLigneMoinsUn, plateau, couleur);
+            int voisinsMoiColonnePlusUn = IABiosphere7.nbVoisinesJoueur(caseConcerneeColonnePlusUn, plateau, couleur);
+            int voisinsMoiColonneMoinsUn = IABiosphere7.nbVoisinesJoueur(caseConcerneeColonneMoinsUn, plateau, couleur);
+            
+            int voisinsMoi = IABiosphere7.nbVoisinesJoueur(coord, plateau, couleur);
+            int voisinsAdverse = IABiosphere7.nbVoisinesJoueur(coord, plateau, couleurAdverse);
 
-                if (Bleu - Rouge >= highest) {//changer pour les simu
-                    highest = Bleu - Rouge;
-                    highestStr = actionsPossiblesDepuisPlateau[TableauEcartZeroIndexDeLindex];
+            double noteAction = 0;
+
+            if (lettreAction == 'P') {
+                noteAction = 10.0;
+
+                noteAction += (voisinsMoi * 50.0);
+                noteAction += (voisinsMoiLignePlusUn * 10.0);
+                noteAction += (voisinsMoiLigneMoinsUn * 10.0);
+                noteAction += (voisinsMoiColonneMoinsUn * 10.0);
+                noteAction += (voisinsMoiColonnePlusUn * 10.0);
+
+                if (voisinsAdverse > 0) {
+                    noteAction -= (120.0 + (voisinsAdverse * 30.0));
+                }
+
+                double ecartLigne = 6.5 - coord.ligne;
+                if (ecartLigne < 0) {
+                    ecartLigne = ecartLigne * -1;
+                }
+
+                double ecartColonne = 6.5 - coord.colonne;
+                if (ecartColonne < 0) {
+                    ecartColonne = ecartColonne * -1;
+                }
+
+                double distCentre = ecartLigne + ecartColonne;
+                noteAction += (15.0 - distCentre);
+            }
+            else if (lettreAction == 'C') {
+
+                //check pas ma case
+                if (caseConcernee.couleur != couleur) {
+                    noteAction = caseConcernee.vitalite * 40.0;
+
+                    //noteAction += (voisinsAdverse * 60.0);
+
+                    noteAction += (voisinsMoi * 20.0);
+
+                    noteAction -= (voisinsAdverse * 45.0);
+
+                    if (nbToursJeu > 30) {
+                        noteAction += 1.0;
+                    }
+                } else {
+                    if(caseConcernee.vitalite < voisinsMoi){
+                        noteAction += (voisinsMoi * 20.0);
+                    }else{
+                        noteAction = -9999.0;
+                    }
                 }
             }
-
-        }
-        else if (nbPommiersMoi >= 3 && HighestVitaMoi <= 3) {//cluster highestVitaMoi pour savoir si c'est rentable !!! si deja config exploitable alors la jouer
-            int bestLigne = ligneAvecLePlusDeCases(plateau, couleur)[1]; //numéro de ligne = [1] (changer pour ne pas avoir la 1ere ligne ?)
-
-            if (nbToursJeu <= 2 && (nbCaseClusterAdverse > nbCaseClusterMoi) ){
-                    highestStr = "" + "C" + bestCaseClusterAdverse.carLigne() + bestCaseClusterAdverse.carColonne();
-            } else {
-                if (CentreCluster != new Coordonnees(13, 13)) {
-                    highestStr = "" + "P" + CentreCluster.carLigne() + CentreCluster.carColonne();
-                }else {//sinon on le construit
-                    Coordonnees emplacement = BuildPatternHorizontale(plateau, couleur, bestLigne);
-                    highestStr = "" + "P" + emplacement.carLigne() + emplacement.carColonne();
-                }
+            if (noteAction > highest) {
+                highest = noteAction;
+                highestStr = lettresAction;
             }
         }
 
-        String actionAfaire = actionsPossiblesDepuisPlateau[0];
-        if (highestStr.matches("[PC][a-n][A-N],[0-9]{1,2},[0-9]{1,2}")) {
-            actionAfaire = highestStr;
+        String actionFinal = " ";
+        if (highestStr != null) {
+            actionFinal = highestStr;
+        } else {
+            actionFinal = ActionsPossibles.enleverVitalites(actionsPossiblesDepuisPlateau[0]);
         }
 
-        String actionFinal = ActionsPossibles.enleverVitalites(actionAfaire);
         return actionFinal;
-        //"PbA,4,6"
-        //return monTacheron.actionChoisie(plateau, nbToursJeu);
     }
     
     //retourne la plus haute vitalité d'une plante de la couleur du joueur en paramètre
