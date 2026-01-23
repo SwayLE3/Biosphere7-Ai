@@ -137,7 +137,6 @@ public class IABiosphere7 {
         // TODO : ici, on choisit aléatoirement n'importe quelle action possible
         // retournée par votre programme. À vous de faire un meilleur choix...
         //
-        MonTacheron monTacheron = new MonTacheron(couleur);
 
         JoueurBiosphere7 joueur = new JoueurBiosphere7();
         String[] actionsPossiblesDepuisPlateau = ActionsPossibles.nettoyerTableau(joueur.actionsPossibles(plateau, couleur, 6));
@@ -145,21 +144,12 @@ public class IABiosphere7 {
         String highestStr = null;
         double highest = -9999.0;
 
-        int nbPommiersBleu = nbPommier(plateau, 'B');
-        int nbPommiersRouge = nbPommier(plateau, 'R');
         char couleurAdverse = ' ';
         if (couleur == 'R') {
             couleurAdverse = 'B';
         } else {
             couleurAdverse = 'R';
         }
-        
-        int nbPommiersMoi = nbPommier(plateau, couleur);
-
-        int HighestVitaMoi = highestVita(plateau, couleur);
-        int HighestVitaAdverse = highestVita(plateau, couleurAdverse);
-
-        Coordonnees CentreCluster = BuildPatternCentre(plateau, couleur);
 
 
         for (int i = 0; i < actionsPossiblesDepuisPlateau.length; i++) {
@@ -211,16 +201,13 @@ public class IABiosphere7 {
                     ecartColonne = ecartColonne * -1;
                 }
 
-                double distCentre = ecartLigne + ecartColonne;
-                noteAction += (15.0 - distCentre);
+                double distanceDuCentre = ecartLigne + ecartColonne;
+                noteAction += (15.0 - distanceDuCentre);
             }
             else if (lettreAction == 'C') {
-
                 //check pas ma case
                 if (caseConcernee.couleur != couleur) {
                     noteAction = caseConcernee.vitalite * 40.0;
-
-                    //noteAction += (voisinsAdverse * 60.0);
 
                     noteAction += (voisinsMoi * 20.0);
 
@@ -253,438 +240,12 @@ public class IABiosphere7 {
         return actionFinal;
     }
     
-    //retourne la plus haute vitalité d'une plante de la couleur du joueur en paramètre
-    int highestVita(Case[][] plateau, char couleur) {
-        int nbColonnes = 14;
-        int nbLignes = 14;
-        int maxVita = 0;
-        for (int parseColonnes = 0; parseColonnes < nbColonnes; parseColonnes++) {
-            for (int parseLignes = 0; parseLignes < nbLignes; parseLignes++) {
-                if (plateau[parseLignes][parseColonnes].plantePresente() && plateau[parseLignes][parseColonnes].couleur == couleur) {
-                    if (plateau[parseLignes][parseColonnes].vitalite > maxVita) {
-                        maxVita = plateau[parseLignes][parseColonnes].vitalite;
-                    }
-                }
-            }
-        }
-        return maxVita;
-    }
-
-    int DetectPatternNb(Case[][] plateau, char couleurMonJoueur) {
-        int nbColonnes = 14;
-        int nbLignes = 14;
-        Coordonnees Centre = new Coordonnees(13, 13);
-        int possibiliteDeBoost = 0;
-        int possibiliteDeBoostMax = 0;
-
-        for (int parseColonnes = 0; parseColonnes < nbColonnes; parseColonnes++) {
-            for (int parseLignes = 0; parseLignes < nbLignes; parseLignes++) {
-
-                //init des variables si possible
-                if (parseColonnes + 2 < nbColonnes) {
-                    Case droitePlusUn = plateau[parseLignes][parseColonnes + 2];
-                    if (droitePlusUn.plantePresente() && droitePlusUn.couleur == couleurMonJoueur) {
-                        possibiliteDeBoost++;
-                        if (possibiliteDeBoost >= possibiliteDeBoostMax){
-                            possibiliteDeBoostMax = possibiliteDeBoost;
-                            Centre = new Coordonnees(parseLignes, parseColonnes);
-                        }
-                    }
-                }
-                if (parseColonnes - 2 >= 0) {
-                    Case gauchePlusUn = plateau[parseLignes][parseColonnes - 2];
-                    if (gauchePlusUn.plantePresente() && gauchePlusUn.couleur == couleurMonJoueur) {
-                        possibiliteDeBoost++;
-                        if (possibiliteDeBoost >= possibiliteDeBoostMax){
-                            possibiliteDeBoostMax = possibiliteDeBoost;
-                            Centre = new Coordonnees(parseLignes, parseColonnes);
-                        }
-                    }
-                }
-                if (parseLignes - 2 >= 0) {
-                    Case HautPlusUn = plateau[parseLignes - 2][parseColonnes];
-                    if (HautPlusUn.plantePresente() && HautPlusUn.couleur == couleurMonJoueur) {
-                        possibiliteDeBoost++;
-                        if (possibiliteDeBoost >= possibiliteDeBoostMax){
-                            possibiliteDeBoostMax = possibiliteDeBoost;
-                            Centre = new Coordonnees(parseLignes, parseColonnes);
-                        }
-                    }
-                }
-                if (parseLignes + 2 < nbLignes) {
-                    Case BasPlusUn = plateau[parseLignes + 2][parseColonnes];
-                    if (BasPlusUn.plantePresente() && BasPlusUn.couleur == couleurMonJoueur) {
-                        possibiliteDeBoost++;
-                        if (possibiliteDeBoost >= possibiliteDeBoostMax){
-                            possibiliteDeBoostMax = possibiliteDeBoost;
-                            Centre = new Coordonnees(parseLignes, parseColonnes);
-                        }
-                    }
-                }
-                //diagonales HautDroit
-                if (parseColonnes + 1 < nbColonnes && parseLignes - 1 >= 0) {
-                    Case diagHautDroit = plateau[parseLignes - 1][parseColonnes + 1];
-                    if (diagHautDroit.plantePresente() && diagHautDroit.couleur == couleurMonJoueur) {
-                        possibiliteDeBoost++;
-                        if (possibiliteDeBoost >= possibiliteDeBoostMax){
-                            possibiliteDeBoostMax = possibiliteDeBoost;
-                            Centre = new Coordonnees(parseLignes, parseColonnes);
-                        }
-                    }
-                }
-                //diagonales BasDroit
-                if (parseColonnes + 1 < nbColonnes && parseLignes + 1 < nbLignes) {
-                    Case diagBasDroit = plateau[parseLignes + 1][parseColonnes + 1];
-                    if (diagBasDroit.plantePresente() && diagBasDroit.couleur == couleurMonJoueur) {
-                        possibiliteDeBoost++;
-                        if (possibiliteDeBoost >= possibiliteDeBoostMax){
-                            possibiliteDeBoostMax = possibiliteDeBoost;
-                            Centre = new Coordonnees(parseLignes, parseColonnes);
-                        }
-                    }
-                }
-                //diagonales BasGauche
-                if (parseColonnes - 1 >= 0 && parseLignes + 1 < nbLignes) {
-                    Case diagBasGauche = plateau[parseLignes + 1][parseColonnes - 1];
-                    if (diagBasGauche.plantePresente() && diagBasGauche.couleur == couleurMonJoueur) {
-                        possibiliteDeBoost++;
-                        if (possibiliteDeBoost >= possibiliteDeBoostMax){
-                            possibiliteDeBoostMax = possibiliteDeBoost;
-                            Centre = new Coordonnees(parseLignes, parseColonnes);
-                        }
-                    }
-                }
-                //diagonales HautGauche
-                if (parseColonnes - 1 >= 0 && parseLignes - 1 >= 0) {
-                    Case diagHautGauche = plateau[parseLignes - 1][parseColonnes - 1];
-                    if (diagHautGauche.plantePresente() && diagHautGauche.couleur == couleurMonJoueur) {
-                        possibiliteDeBoost++;
-                        if (possibiliteDeBoost >= possibiliteDeBoostMax){
-                            possibiliteDeBoostMax = possibiliteDeBoost;
-                            Centre = new Coordonnees(parseLignes, parseColonnes);
-                        }
-                    }
-                }
-            }
-        }
-        return possibiliteDeBoostMax;
-    }
-    
-    //renvoie la coordonnes de la case qui donne le plus de possibilité de boost d'un cluster
-    Coordonnees DetectPatternCoord(Case[][] plateau, char couleurMonJoueur) {
-        int nbColonnes = 14;
-        int nbLignes = 14;
-        Coordonnees Centre = new Coordonnees(13, 13);
-        int possibiliteDeBoost = 0;
-        int possibiliteDeBoostMax = 0;
-
-        for (int parseColonnes = 0; parseColonnes < nbColonnes; parseColonnes++) {
-            for (int parseLignes = 0; parseLignes < nbLignes; parseLignes++) {
-
-                if (plateau[parseLignes][parseColonnes].plantePresente() && plateau[parseLignes][parseColonnes].couleur == couleurMonJoueur){
-                //init des variables si possible
-                if (parseColonnes + 2 < nbColonnes) {
-                    Case droitePlusUn = plateau[parseLignes][parseColonnes + 2];
-                    if (droitePlusUn.plantePresente() && droitePlusUn.couleur == couleurMonJoueur) {
-                        possibiliteDeBoost++;
-                        if (possibiliteDeBoost >= possibiliteDeBoostMax){
-                            possibiliteDeBoostMax = possibiliteDeBoost;
-                            Centre = new Coordonnees(parseLignes, parseColonnes);
-                        }
-                    }
-                }
-                if (parseColonnes - 2 >= 0) {
-                    Case gauchePlusUn = plateau[parseLignes][parseColonnes - 2];
-                    if (gauchePlusUn.plantePresente() && gauchePlusUn.couleur == couleurMonJoueur) {
-                        possibiliteDeBoost++;
-                        if (possibiliteDeBoost >= possibiliteDeBoostMax){
-                            possibiliteDeBoostMax = possibiliteDeBoost;
-                            Centre = new Coordonnees(parseLignes, parseColonnes);
-                        }
-                    }
-                }
-                if (parseLignes - 2 >= 0) {
-                    Case HautPlusUn = plateau[parseLignes - 2][parseColonnes];
-                    if (HautPlusUn.plantePresente() && HautPlusUn.couleur == couleurMonJoueur) {
-                        possibiliteDeBoost++;
-                        if (possibiliteDeBoost >= possibiliteDeBoostMax){
-                            possibiliteDeBoostMax = possibiliteDeBoost;
-                            Centre = new Coordonnees(parseLignes, parseColonnes);
-                        }
-                    }
-                }
-                if (parseLignes + 2 < nbLignes) {
-                    Case BasPlusUn = plateau[parseLignes + 2][parseColonnes];
-                    if (BasPlusUn.plantePresente() && BasPlusUn.couleur == couleurMonJoueur) {
-                        possibiliteDeBoost++;
-                        if (possibiliteDeBoost >= possibiliteDeBoostMax){
-                            possibiliteDeBoostMax = possibiliteDeBoost;
-                            Centre = new Coordonnees(parseLignes, parseColonnes);
-                        }
-                    }
-                }
-                //diagonales HautDroit
-                if (parseColonnes + 1 < nbColonnes && parseLignes - 1 >= 0) {
-                    Case diagHautDroit = plateau[parseLignes - 1][parseColonnes + 1];
-                    if (diagHautDroit.plantePresente() && diagHautDroit.couleur == couleurMonJoueur) {
-                        possibiliteDeBoost++;
-                        if (possibiliteDeBoost >= possibiliteDeBoostMax){
-                            possibiliteDeBoostMax = possibiliteDeBoost;
-                            Centre = new Coordonnees(parseLignes, parseColonnes);
-                        }
-                    }
-                }
-                //diagonales BasDroit
-                if (parseColonnes + 1 < nbColonnes && parseLignes + 1 < nbLignes) {
-                    Case diagBasDroit = plateau[parseLignes + 1][parseColonnes + 1];
-                    if (diagBasDroit.plantePresente() && diagBasDroit.couleur == couleurMonJoueur) {
-                        possibiliteDeBoost++;
-                        if (possibiliteDeBoost >= possibiliteDeBoostMax){
-                            possibiliteDeBoostMax = possibiliteDeBoost;
-                            Centre = new Coordonnees(parseLignes, parseColonnes);
-                        }
-                    }
-                }
-                //diagonales BasGauche
-                if (parseColonnes - 1 >= 0 && parseLignes + 1 < nbLignes) {
-                    Case diagBasGauche = plateau[parseLignes + 1][parseColonnes - 1];
-                    if (diagBasGauche.plantePresente() && diagBasGauche.couleur == couleurMonJoueur) {
-                        possibiliteDeBoost++;
-                        if (possibiliteDeBoost >= possibiliteDeBoostMax){
-                            possibiliteDeBoostMax = possibiliteDeBoost;
-                            Centre = new Coordonnees(parseLignes, parseColonnes);
-                        }
-                    }
-                }
-                //diagonales HautGauche
-                if (parseColonnes - 1 >= 0 && parseLignes - 1 >= 0) {
-                    Case diagHautGauche = plateau[parseLignes - 1][parseColonnes - 1];
-                    if (diagHautGauche.plantePresente() && diagHautGauche.couleur == couleurMonJoueur) {
-                        possibiliteDeBoost++;
-                        if (possibiliteDeBoost >= possibiliteDeBoostMax){
-                            possibiliteDeBoostMax = possibiliteDeBoost;
-                            Centre = new Coordonnees(parseLignes, parseColonnes);
-                        }
-                    }
-                }
-                }
-            }
-        }
-        return Centre;
-    }
-    
-    //renvoie la coordonnes du centre du cluster si il y a 2 cases au moins pour le début
-    Coordonnees BuildPatternCentre(Case[][] plateau, char couleurMonJoueur) {
-        int nbColonnes = 14;
-        int nbLignes = 14;
-        Coordonnees Centre = new Coordonnees(13, 13);
-
-        for (int parseColonnes = 0; parseColonnes < nbColonnes; parseColonnes++) {
-            for (int parseLignes = 0; parseLignes < nbLignes; parseLignes++) {
-
-                //init des variables si possible
-                if (parseColonnes + 2 < nbColonnes) {
-                    Case droitePlusUn = plateau[parseLignes][parseColonnes + 2];
-                    if (droitePlusUn.plantePresente() && droitePlusUn.couleur == couleurMonJoueur) {
-                        Centre = new Coordonnees(parseLignes, parseColonnes + 1);
-                    }
-                }
-                if (parseColonnes - 2 >= 0) {
-                    Case gauchePlusUn = plateau[parseLignes][parseColonnes - 2];
-                    if (gauchePlusUn.plantePresente() && gauchePlusUn.couleur == couleurMonJoueur) {
-                        Centre = new Coordonnees(parseLignes, parseColonnes - 1);
-                    }
-                }
-                if (parseLignes - 2 >= 0) {
-                    Case HautPlusUn = plateau[parseLignes - 2][parseColonnes];
-                    if (HautPlusUn.plantePresente() && HautPlusUn.couleur == couleurMonJoueur) {
-                        Centre = new Coordonnees(parseLignes - 1, parseColonnes);
-                    }
-                }
-                if (parseLignes + 2 < nbLignes) {
-                    Case BasPlusUn = plateau[parseLignes + 2][parseColonnes];
-                    if (BasPlusUn.plantePresente() && BasPlusUn.couleur == couleurMonJoueur) {
-                        Centre = new Coordonnees(parseLignes + 1, parseColonnes);
-                    }
-                }
-            }
-        }
-        return Centre;
-    }
-
-    //renvoie la coordonnée de la case horizontale pour faire le pattern
-    Coordonnees BuildPatternHorizontale(Case[][] plateau, char couleurMonJoueur, int numLigne) {
-        int nbColonnes = 14;
-        Coordonnees meilleurCordActuelle = new Coordonnees(13, 13);
-        for (int parseColonnes = 0; parseColonnes < nbColonnes; parseColonnes++) {
-            if (parseColonnes + 2 < nbColonnes && !plateau[numLigne][parseColonnes + 2].plantePresente() && plateau[numLigne][parseColonnes].couleur == couleurMonJoueur && plateau[numLigne][parseColonnes].plantePresente()) {
-                meilleurCordActuelle = new Coordonnees(numLigne, parseColonnes + 2);
-            }
-        }
-        return meilleurCordActuelle;
-    }
-
-    int nbPommier(Case[][] plateau, char couleurAconsulter) {
-        int nbLignes = 14;
-        int nbColonnes = 14;
-        int NbDePommiers = 0;
-        for (int parseLignes = 0; parseLignes < nbLignes; parseLignes++) {
-            for (int parseColonnes = 0; parseColonnes < nbColonnes; parseColonnes++) {
-                if (plateau[parseLignes][parseColonnes].plantePresente() && plateau[parseLignes][parseColonnes].couleur == couleurAconsulter) {
-                    NbDePommiers++;
-                }
-            }
-        }
-        return NbDePommiers;
-    }
-
-    //return la ligne avec le plus de cases 
-    int[] ligneAvecLePlusDeCases(Case[][] plateau, char couleurMonJoueur) {
-        int nbLignes = 14;
-        int nbColonnes = 14;
-
-        int[] toReturn = new int[2];
-        //toReturn[0] est le nombre de case sur la même ligne
-        //toReturn[1] est le numéro de la ligne
-
-        int nbCaseMax = 0;
-        int BestLigne = 0;
-        for (int parseLignes = 0; parseLignes < nbLignes; parseLignes++) {
-            int nbCase = 0;
-            for (int parseColonnes = 0; parseColonnes < nbColonnes; parseColonnes++) {
-                if (plateau[parseLignes][parseColonnes].plantePresente() && plateau[parseLignes][parseColonnes].couleur == couleurMonJoueur) {
-                    nbCase++;
-                    if (nbCase >= nbCaseMax) { //ici >= prends la ligne la plus basse dans le tableau même si elle a autant de pommiers
-                        BestLigne = parseLignes;
-                        nbCaseMax = nbCase;
-                    }
-                }
-            }
-        }
-        toReturn[0] = BestLigne;
-        toReturn[1] = nbCaseMax;
-        return toReturn;
-    }
-
-    //pour le patern (une case entourrée d autre pommier ?) !! rajouter la mm mechanique pour couper (avantage)
-    Coordonnees meilleurEmplacement(Case[][] plateau, char couleurMonJoueur) {
-        int nbLignes = 14;
-        int nbColonnes = 14;
-
-        Coordonnees meilleurCordActuelle = new Coordonnees(1, 1); //to fix
-        int nbVoisinsMax = 0;
-
-        for (int parseLignes = 0; parseLignes < nbLignes; parseLignes++) {
-            for (int parseColonnes = 0; parseColonnes < nbColonnes; parseColonnes++) {
-                int nbVoisins = 0;
-                if (!plateau[parseLignes][parseColonnes].plantePresente()) {//check que c est une case vide
-                    if (parseLignes - 1 >= 0 && plateau[parseLignes - 1][parseColonnes].plantePresente() && plateau[parseLignes - 1][parseColonnes].couleur == couleurMonJoueur) {
-                        nbVoisins++;
-                    }
-                    if (parseLignes + 1 < nbLignes && plateau[parseLignes + 1][parseColonnes].plantePresente() && plateau[parseLignes + 1][parseColonnes].couleur == couleurMonJoueur) {
-                        nbVoisins++;
-                    }
-                    if (parseColonnes - 1 >= 0 && plateau[parseLignes][parseColonnes - 1].plantePresente() && plateau[parseLignes][parseColonnes - 1].couleur == couleurMonJoueur) {
-                        nbVoisins++;
-                    }
-                    if (parseColonnes + 1 < nbColonnes && plateau[parseLignes][parseColonnes + 1].plantePresente() && plateau[parseLignes][parseColonnes + 1].couleur == couleurMonJoueur) {
-                        nbVoisins++;
-                    }
-
-                    if (nbVoisins > nbVoisinsMax) {
-                        meilleurCordActuelle = new Coordonnees(parseLignes, parseColonnes);
-                        nbVoisinsMax = nbVoisins;
-                    }
-                }
-            }
-        }
-        return meilleurCordActuelle;
-    }
-
-    //donne les coordonnes d'une case bonne pour faire le pattern
-    Coordonnees ConstructionPattern(Case[][] plateau, char couleurMonJoueur) {
-        int nbLignes = 14;
-        int nbColonnes = 14;
-
-        Coordonnees meilleurCordActuelle = new Coordonnees(2, 2); //to fix
-        int nbVoisinsCroixMax = 0;
-
-        for (int parseLignes = 0; parseLignes < nbLignes; parseLignes++) {
-            for (int parseColonnes = 0; parseColonnes < nbColonnes; parseColonnes++) {
-                int nbVoisinsCroix = 0;
-                if (plateau[parseLignes][parseColonnes].plantePresente()) {
-                    if (parseLignes - 2 >= 0 && !plateau[parseLignes - 2][parseColonnes].plantePresente()) {
-                        nbVoisinsCroix++;
-                    }
-                    if (parseLignes + 2 < nbLignes && !plateau[parseLignes + 2][parseColonnes].plantePresente()) {
-                        nbVoisinsCroix++;
-                    }
-                    if (parseColonnes - 2 >= 0 && !plateau[parseLignes][parseColonnes - 2].plantePresente()) {
-                        nbVoisinsCroix++;
-                    }
-                    if (parseColonnes + 2 < nbColonnes && !plateau[parseLignes][parseColonnes + 2].plantePresente()) {
-                        nbVoisinsCroix++;
-                    }
-                    if (nbVoisinsCroix > nbVoisinsCroixMax) {
-                        meilleurCordActuelle = new Coordonnees(parseLignes, parseColonnes);
-                        nbVoisinsCroixMax = nbVoisinsCroix;
-                    }
-                }
-            }
-        }
-
-        return meilleurCordActuelle;
-    }
-
-    //permet de savoir si on peux planter à coté d'une case
-    boolean checkPlanter(Case[][] plateau, Coordonnees coord, String direction) {
-        Coordonnees coordHaut = new Coordonnees(coord.ligne - 1, coord.colonne);
-        Coordonnees coordBas = new Coordonnees(coord.ligne + 1, coord.colonne);
-        Coordonnees coordGauche = new Coordonnees(coord.ligne, coord.colonne - 1);
-        Coordonnees coordDroite = new Coordonnees(coord.ligne, coord.colonne + 1);
-        switch (direction) {
-            case "haut":
-                if (coordHaut.estDansPlateau() == true) {
-                    if (plateau[coord.ligne - 1][coord.colonne].plantePresente() == true) {
-                        return false;
-                    } else {
-                        return true;
-                    }
-                }
-            case "bas":
-                if (coordBas.estDansPlateau() == true) {
-                    if (plateau[coord.ligne + 1][coord.colonne].plantePresente() == true) {
-                        return false;
-                    } else {
-                        return true;
-                    }
-                }
-            case "gauche":
-                if (coordGauche.estDansPlateau() == true) {
-                    if (plateau[coord.ligne][coord.colonne - 1].plantePresente() == true) {
-                        return false;
-                    } else {
-                        return true;
-                    }
-                }
-            case "droite":
-                if (coordDroite.estDansPlateau() == true) {
-                    if (plateau[coord.ligne][coord.colonne + 1].plantePresente() == true) {
-                        return false;
-                    } else {
-                        return true;
-                    }
-                }
-            default:
-                return false;
-        }
-    }
 
     /**
-     * converti une coordonne de string à coordonnes (l objet)
+     * converti une string de coordonnee en coordonnes (l'objet)
      *
-     * @param coord
-     * @return
+     * @param coord les coordonnees en string
+     * @return des coordonnees
      */
     Coordonnees coordsStringToCoords(String coord) {
         String[] separe = coord.split(",");
@@ -699,9 +260,9 @@ public class IABiosphere7 {
     /**
      * retourne une liste de string avec les emplacement de mes arbres
      *
-     * @param plateau
-     * @param couleurMonJoueur
-     * @return
+     * @param plateau le plateau de jeu
+     * @param couleurMonJoueur la couleur du joueur concerné
+     * @return une liste de string avec les emplacement des arbres de la couleur concernée
      */
     String[] CaseMonJoueur(Case[][] plateau, char couleurMonJoueur) {
         int nbLignes = 14;
